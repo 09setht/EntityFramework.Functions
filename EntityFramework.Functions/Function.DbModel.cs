@@ -508,8 +508,18 @@ namespace EntityFramework.Functions
                     if (modelReturnParameterEntityType != null)
                     {
                         storeReturnParameterRowType = RowType.Create(
-                            modelReturnParameterEntityType.Properties.Select(property => property.Clone()),
+                            modelReturnParameterEntityType.Properties.Select(property =>
+                            {
+                                var typeUsage = TypeUsage.Create(model.ProviderManifest.GetStoreType(property.TypeUsage).EdmType, property.TypeUsage.Facets);
+                                var result = EdmProperty.Create(property.Name, typeUsage);
+                                var propertyNames = new[] { nameof(EdmProperty.Name), nameof(EdmProperty.TypeUsage), nameof(EdmProperty.MetadataProperties) };
+                                result.SetMetadataProperties(property.MetadataProperties.Where(m => !propertyNames.Contains(m.Name)));
+                                return result;
+                            }),
                             null);
+                        //storeReturnParameterRowType = RowType.Create(
+                        //    modelReturnParameterEntityType.Properties.Select(property => property.Clone()),
+                        //    null);
                     }
                     else
                     {
